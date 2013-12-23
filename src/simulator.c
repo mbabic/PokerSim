@@ -37,6 +37,7 @@ run_simulations(int nPlayers, int nSimulations, char *playerHandStr,
 
 	/* Run simulations. */
 	for (i = 0; i < nSimulations; i++) {
+		DBPRINT(("Running simulation %d.\n", i));
 		run_simulation(nPlayers, playerHand, boardCards, stats);
 	}
 	
@@ -53,7 +54,6 @@ static void
 run_simulation(int nPlayers, StdDeck_CardMask playerHand, 
     StdDeck_CardMask boardCards, StatsStruct *stats)
 {
-	DBPRINT(("Hello from inside run_simulation!\n"));
 
 	/* Cards that have already been dealt. */
 	StdDeck_CardMask deadCards;
@@ -81,6 +81,9 @@ run_simulation(int nPlayers, StdDeck_CardMask playerHand,
 		StdDeck_CardMask_OR(deadCards, deadCards, extraBoardCards);
 
 	}
+
+	DBPRINT(("Dead cards after dealing to board: %s\n", 
+	    StdDeck_maskString(deadCards)));
 
 	/* Deal cards to the remaining players. */
 	
@@ -129,9 +132,12 @@ str_to_poker_hand(char *handStr)
 
 			/* 
 			 * Else, we know another card is in the string, so 
-			 * advance the pointer once more time.
+			 * advance the pointer once more time and reset cardStr.
 			 */
 			handStr += 1;
+			cardStr[0] = *handStr;
+			cardStr[1] = *(handStr + 1);
+			cardStr[2] = '\0';
 		}
 	}
 

@@ -5,6 +5,7 @@
 #ifndef SIMULATOR_H
 #define SIMULATOR_H
 
+#include <assert.h>
 #include <err.h>
 #include <stdio.h>
 #include <stdlib.h>
