@@ -7,6 +7,7 @@ SRC = src
 # Compiler and compiler options.
 CC = cc
 CFLAGS = -c -Wall
+LIB_INCLUDE = /usr/local/include/poker-eval
 LIB = poker-eval
 
 SOURCES =  $(SRC)/main.c $(SRC)/simulator.h $(SRC)/simulator.c $(SRC)/stats.h
@@ -25,6 +26,7 @@ $(EXE): $(OBJS)
 	    -o $(BIN)/$@
 
 $(OBJS): $(SOURCES)
-	$(CC) $(CFLAGS) $(subst bin,src,$(subst .o,.c,$@))  -o $@
+	$(CC) $(CFLAGS) -I$(LIB_INCLUDE) $(subst bin,src,$(subst .o,.c,$@))  \
+	    -o $@
 
 

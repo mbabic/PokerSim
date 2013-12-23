@@ -8,12 +8,12 @@
 #include <err.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <poker-eval/poker_defs.h>
+#include <poker-eval/deck_std.h>
+#include <poker-eval/enumerate.h>
 
 #include "stats.h"
 
 void run_simulations(int, int);
-void run_simulation(StatsStruct *);
-void simulate_game();
-void update_stats();
 
 #endif
