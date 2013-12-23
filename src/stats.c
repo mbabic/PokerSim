@@ -6,14 +6,14 @@
  * StatsStruct object.
  */
 StatsStruct *
-init_stats_struct(int nPlayers, int nSimulations) 
+init_stats_struct(int nPlayers) 
 {
 	StatsStruct *ss = NULL;
 
 	ss = calloc(1, sizeof(StatsStruct));
 	if (!ss) err(1, "Failed to allocate memory for StatsStruct.");
 
-	ss->nSimulations = nSimulations;
+	ss->nSimulations = 0;
 
 	ss->ranks = calloc(nPlayers, sizeof(int));
 	if (!(ss->ranks)) err(1, "Failled to allocate memory for StatsStruct "

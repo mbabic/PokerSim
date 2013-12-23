@@ -36,7 +36,7 @@ typedef struct
 
 } StatsStruct;
 
-StatsStruct *init_stats_struct(int, int);
+StatsStruct *init_stats_struct(int);
 void free_stats_struct(StatsStruct *);
 
 

@@ -8,20 +8,39 @@
 
 #include "simulator.h"
 
-/* Module-only state variables. */
-static int nPlayers, nSimulations;
-
-/* Private member methods. */
+/* Private function declarations. */
 static void do_nothing();
 static void run_simulation(int, StdDeck_CardMask, StdDeck_CardMask,
     StatsStruct *);
+static StdDeck_CardMask str_to_poker_hand(char *);
 
+/* Private function implementations */
 
+/*
+ * Runs the simulations.
+ */
 void
-run_simulations(int np, int ns)
+run_simulations(int nPlayers, int nSimulations, char *playerHandStr, 
+    char *boardCardsStr)
 {
-	nPlayers = np;
-	nSimulations = ns;
+	StatsStruct *stats = NULL;
+	StdDeck_CardMask playerHand, boardCards;
+	int i;
+
+
+	/* Convert hand strings into hand bit masks (used by pokersource) */
+	playerHand = str_to_poker_hand(playerHandStr); 
+	boardCards = str_to_poker_hand(boardCardsStr); 
+
+	/* Initialize stat-tracking structure.*/
+	stats = init_stats_struct(nPlayers);
+
+	/* Run simulations. */
+	for (i = 0; i < nSimulations; i++) {
+		run_simulation(nPlayers, playerHand, boardCards, stats);
+	}
+	
+
 }
 
 /*
@@ -34,6 +53,8 @@ static void
 run_simulation(int nPlayers, StdDeck_CardMask playerHand, 
     StdDeck_CardMask boardCards, StatsStruct *stats)
 {
+	DBPRINT(("Hello from inside run_simulation!\n"));
+
 	/* Cards that have already been dealt. */
 	StdDeck_CardMask deadCards;
 
@@ -42,6 +63,7 @@ run_simulation(int nPlayers, StdDeck_CardMask playerHand,
 
 	int nBoardCards;	/* number of board cards */ 
 
+	/* Add playerHand and boardCards to deadCards */
 	StdDeck_CardMask_OR(deadCards, playerHand, boardCards);
 
 	/* Deal out rest of board cards (if needed) */
@@ -60,11 +82,9 @@ run_simulation(int nPlayers, StdDeck_CardMask playerHand,
 
 	}
 
-
-	/* Good enough for now. */
-
-
+	/* Deal cards to the remaining players. */
 	
+
 	 
 }
 
@@ -76,4 +96,44 @@ static void
 do_nothing()
 {
 
+}
+
+/*
+ * Converts the given hand string into a pokersource bitmask.
+ */
+static StdDeck_CardMask 
+str_to_poker_hand(char *handStr)
+{
+	StdDeck_CardMask card, hand;
+	StdDeck_CardMask_RESET(hand);
+	char cardStr[3];
+	int cardIndex = -1;
+	
+
+	if (handStr && strlen(handStr)) {
+		cardStr[0] = *handStr;
+		cardStr[1] = *(handStr + 1);
+		cardStr[2] = '\0';
+
+		while (*cardStr) {
+		
+			/* Create card mask from string. */	
+			StdDeck_stringToCard(cardStr, &cardIndex);
+			card = StdDeck_MASK(cardIndex);
+			StdDeck_CardMask_OR(hand, hand, card);
+			
+			/* Advance handStr pointer to next card in the string */
+			/* First ensure next byte is not null-byte. */
+			handStr += 1;
+			if (!(*handStr)) break;
+
+			/* 
+			 * Else, we know another card is in the string, so 
+			 * advance the pointer once more time.
+			 */
+			handStr += 1;
+		}
+	}
+
+	return hand;
 }
