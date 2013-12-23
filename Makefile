@@ -8,8 +8,9 @@ SRC = src
 CC = cc
 CFLAGS = -c -Wall
 
-SOURCES = $(SRC)/main.c
-OBJS = $(BIN)/main.o
+SOURCES =  $(SRC)/main.c $(SRC)/simulator.h $(SRC)/simulator.c $(SRC)/stats.h
+SOURCES += $(SRC)/stats.c
+OBJS = $(BIN)/main.o $(BIN)/stats.o $(BIN)/simulator.o
 EXE = hand_evaluator
 
 all: $(CFLAGS) += -O3
