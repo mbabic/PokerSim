@@ -62,11 +62,16 @@ run_simulation(int nPlayers, StdDeck_CardMask playerHand,
 	StdDeck_CardMask extraBoardCards; 
 
 	int nBoardCards;	/* number of board cards */ 
+	int i;
 
 	/* Add playerHand and boardCards to deadCards */
 	StdDeck_CardMask_OR(deadCards, playerHand, boardCards);
 
 	/* Deal out rest of board cards (if needed) */
+	/* In principle, it shouldn't matter if we deal board cards first
+	 * or if we deal to the other players (even though in real games the
+	 * other players have their cards dealt to them before the flop)
+	 */
 	nBoardCards = StdDeck_numCards(boardCards);
 	if (nBoardCards == 3) {
 	
@@ -86,7 +91,9 @@ run_simulation(int nPlayers, StdDeck_CardMask playerHand,
 	    StdDeck_maskString(deadCards)));
 
 	/* Deal cards to the remaining players. */
-	
+	for(i = 0; i < nPlayers - 1; i++) {
+			
+	}
 
 	 
 }
