@@ -170,8 +170,8 @@ str_to_poker_hand(char *handStr)
 	char cardStr[3];
 	int cardIndex = -1;
 	
-
-	if (handStr && strlen(handStr)) {
+	if (!handStr) return hand;
+	if (strlen(handStr)) {
 		cardStr[0] = *handStr;
 		cardStr[1] = *(handStr + 1);
 		cardStr[2] = '\0';
