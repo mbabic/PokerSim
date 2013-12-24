@@ -6,7 +6,7 @@ SRC = src
 
 # Compiler and compiler options.
 CC = cc
-CFLAGS = -c -Wall
+CFLAGS = -c
 LDFLAGS = 
 LIB_INCLUDE = /usr/local/include/poker-eval
 LIB = poker-eval
@@ -17,10 +17,10 @@ SOURCES += $(SRC)/parse_input.h
 OBJS = $(BIN)/main.o $(BIN)/stats.o $(BIN)/simulator.o $(BIN)/parse_input.o 
 EXE = hand_evaluator
 
-all: CFLAGS += -O3
+all: CFLAGS += -O3 -Wno-unused-result
 all: $(EXE)
 
-debug: CFLAGS += -g -DDEBUG
+debug: CFLAGS += -g -DDEBUG -Wall
 debug: $(EXE)
 
 clean:
