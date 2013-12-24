@@ -12,8 +12,9 @@ LIB_INCLUDE = /usr/local/include/poker-eval
 LIB = poker-eval
 
 SOURCES =  $(SRC)/main.c $(SRC)/simulator.h $(SRC)/simulator.c $(SRC)/stats.h
-SOURCES += $(SRC)/stats.c $(SRC)/utils.h $(SRC)/args.h
-OBJS = $(BIN)/main.o $(BIN)/stats.o $(BIN)/simulator.o 
+SOURCES += $(SRC)/stats.c $(SRC)/utils.h $(SRC)/args.h $(SRC)/parse_input.c
+SOURCES += $(SRC)/parse_input.h
+OBJS = $(BIN)/main.o $(BIN)/stats.o $(BIN)/simulator.o $(BIN)/parse_input.o 
 EXE = hand_evaluator
 
 all: CFLAGS += -O3

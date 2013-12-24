@@ -13,6 +13,7 @@
 #include <stdlib.h>
 
 #include "args.h"
+#include "parse_input.h"
 #include "simulator.h"
 
 #define DEFAULT_NUM_PLAYERS 4
@@ -78,6 +79,7 @@ main(int argc, char *argv[])
 
 	/* Get master player's hand. */
 	get_std_in(playerHandStr, sizeof(playerHandStr));
+	parse_input_string(playerHandStr, strlen(playerHandStr), PLAYER_HAND);
 	return 0;	
 	/* Run pre-flop simulations. */
 //	query_run_sim(&runSim);
