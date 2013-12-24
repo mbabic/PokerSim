@@ -80,11 +80,11 @@ void
 print_stats_struct(StatsStruct *ss)
 {
 	int i;
+	fprintf(stdout, "Equity: \t\t\t\t %f\n", ss->equity);
 	for(i = 0; i < ss->nPlayers; i++) {
 		fprintf(stdout, "Likelihood given hand is of rank %d:\t %f\n",
 		    i+1, ss->results[i]);
 	}
-	fprintf(stdout, "Hand has equity of %f\n", ss->equity);
 }
 
 /*
