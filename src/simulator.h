@@ -29,7 +29,7 @@ struct TrialResults {
 /* Below is a custom-defined Monte Carlo sampling of the deck of cards
  * which more multi-threaded friendly prng (before implementation of the macro
  * below it was the case that increasing the number of threads actually
- * _slowed down_ system performance. */
+ * _slowed down_ application performance). */
 #define MONTECARLO_N_CARDS_SAMPLE(cards_var, dead_cards, num_cards, buf)\
 do {\
 	StdDeck_CardMask _used = dead_cards;\
