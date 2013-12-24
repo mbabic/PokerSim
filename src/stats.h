@@ -33,11 +33,11 @@ typedef struct
 
 	/* stores results in a manner analogous to the ranks array */
 	double *results;
-
-	/* Store number of trials the master player one, fractional as a tie
+	
+	/* Store number of trials the master player won, fractional as a tie
 	 * for first results in a win value of (1.0) / (num players tied for
  	 * first */
-	double *wins;
+	double wins;
 	/* equity = wins/nSimulations */	
 	double equity;
  
@@ -47,7 +47,8 @@ typedef struct
 } StatsStruct;
 
 StatsStruct *init_stats_struct(int);
-void update_stats(StatsStruct *, int);
+void update_stats(StatsStruct *, int, double);
+void merge_stats_structs(StatsStruct *, StatsStruct *);
 void calculate_results(StatsStruct *);
 void print_stats_struct(StatsStruct *);
 void free_stats_struct(StatsStruct *);

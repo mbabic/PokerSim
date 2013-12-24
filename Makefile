@@ -9,7 +9,8 @@ CC = cc
 CFLAGS = -c
 LDFLAGS = 
 LIB_INCLUDE = /usr/local/include/poker-eval
-LIB = poker-eval
+POKER_LIB = poker-eval
+THREADING_LIB = pthread
 
 SOURCES =  $(SRC)/main.c $(SRC)/simulator.h $(SRC)/simulator.c $(SRC)/stats.h
 SOURCES += $(SRC)/stats.c $(SRC)/utils.h $(SRC)/args.h $(SRC)/parse_input.c
@@ -27,11 +28,10 @@ clean:
 	rm $(BIN)/*.o $(BIN)/hand_evaluator
 
 $(EXE): $(OBJS)
-	$(CC) $(LDFLAGS) $(OBJS) -l$(LIB) \
-	    -o $(BIN)/$@
+	$(CC) $(LDFLAGS) $(OBJS) -l$(POKER_LIB) -l$(THREADING_LIB) -o $(BIN)/$@
 
 $(OBJS): $(SOURCES)
-	$(CC) $(CFLAGS) -I$(LIB_INCLUDE) $(subst bin,src,$(subst .o,.c,$@))  \
-	    -o $@
+	$(CC) $(CFLAGS) -I$(LIB_INCLUDE) $(subst bin,src,$(subst .o,.c,$@)) -o $@
+
 
 
