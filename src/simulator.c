@@ -8,67 +8,140 @@
 
 #include "simulator.h"
 
+/*
+ * The number of threads to be created -- set in main.c as part of cmd line
+ * argument parsing.
+ */
+int nThreads;
+
 /* 
  * Private pieces of states for each simulation (i.e., the variables
  * which do not change between simulations.
- * TODO: if you want to parallelize the running of simulations eventually,
- * then these pieces of state will have to be moved into run_simulations() and
- * a new function that launches threads with run_simulations() will be 
- * implemented.
  */
-static int nPlayers;
+static int nPlayers, nSimulations;
 static StdDeck_CardMask playerHand, boardCards;
-static StatsStruct *stats;
-
-/* Private function declarations. */
-static void do_nothing();
-static void run_simulation();
-static StdDeck_CardMask str_to_poker_hand(char *);
-
-/* Private function implementations */
 
 /*
- * Sets state vars, run simulations.
+ * Global stats struct in which results of all simulations of all threads are
+ * accumulated.
+ */
+static StatsStruct *globalStats;
+
+/*
+ * Mutex protecting access to globalStats struct.
+ */
+static pthread_mutex_t statsMutex = PTHREAD_MUTEX_INITIALIZER;
+
+static void do_nothing();
+static int run_simulation();
+static void *run_simulation_batch(void *);
+static StdDeck_CardMask str_to_poker_hand(char *);
+
+
+/*
+ * Sets state vars, launches simulation threads.
  */
 void
 run_simulations(int np, int ns, char *playerHandStr, char *boardCardsStr)
 {
-	int i;
+	pthread_t threads[nThreads];
+	pthread_attr_t attr;
+	struct timeval start, end;	
+	void *status;
+	int i, ret;
 
-	/* Set number of players. */
+	GET_TIME(start);
+
+	/* Set number of players and number of simulations. */
 	nPlayers = np;
+	nSimulations = ns;
 
 	/* Convert hand strings into hand bit masks (used by pokersource) */
 	playerHand = str_to_poker_hand(playerHandStr); 
 	boardCards = str_to_poker_hand(boardCardsStr); 
 
-	/* Initialize stat-tracking structure.*/
-	stats = init_stats_struct(nPlayers);
+	/* Make threads joinable (so that we know when all threads have 
+	 * finished executing). */
+	pthread_attr_init(&attr);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+	pthread_setconcurrency(nThreads);
 
-	/* Run simulations. */
-	for (i = 0; i < ns; i++) {
-		DBPRINT(("Running simulation %d of %d.\n", i+1, ns));
-		run_simulation();
+	/* Init global stats struct. */
+	globalStats = init_stats_struct(nPlayers);
+
+	/* Launch simulation batch threads. */
+	for (i = 0; i < nThreads; i++) {
+		ret = pthread_create(&threads[i], NULL, run_simulation_batch,
+		    &i);
+		if (ret) {
+			err(1, "pthread_create returned error code %d", ret);
+		}
+	}
+
+	/* Wait for all threads to finish executing. */
+	for (i = 0; i < nThreads; i++) {
+		ret = pthread_join(threads[i], &status);
+		if (ret) err(1, "pthread_join returned error code %d", ret);
 	}
 
 	/* Tally and print out results. */
-	calculate_results(stats);
-	print_stats_struct(stats);
+	calculate_results(globalStats);
+	print_stats_struct(globalStats);
 
+	GET_TIME(end);
+	PRINT_TIME(start, end);
 	/* Clean up allocated memory. */
+	free_stats_struct(globalStats);
+}
+
+/*
+ * Method passed to pthread_create -- it is the routine that each thread will
+ * run in order to runs its subset of the simulations.
+ */
+static void *
+run_simulation_batch(void *threadArgs)
+{
+	StatsStruct *stats = NULL;
+	unsigned int seed;
+	int i, nIterations, trialResult, *threadId;
+
+	threadId = (int *) threadArgs;
+
+	seed = *threadId * 11231;	/* weak for now */
+
+	stats = init_stats_struct(nPlayers);
+
+	nIterations = (nSimulations / nThreads) + 1;
+	
+	for(i = 0; i < nIterations; i++) {
+		trialResult = run_simulation();
+		update_stats(stats, trialResult);	
+	} 
+
+	
+	/* Grab mutex and update global stats structure. */
+	pthread_mutex_lock(&statsMutex);
+	merge_stats_structs(globalStats, stats);
+	pthread_mutex_unlock(&statsMutex);
+
 	free_stats_struct(stats);
+	pthread_exit((void *) 0);
 }
 
 /*
  * Given the player's hand and the cards on the board (i.e., the flop and
  * potentially the turn and river card), randomly deals out the rest of the
  * cards to the given number of players and determines the strength of 
- * the player's hand.
+ * the player's hand.  
+ *
+ * Takes as an argument the seed for the prng of the threads running the trial. 
+ *
+ * Returns an integer representing the rank of the 
+ * master player's hand in the trial.
  */
-static void
-run_simulation()
+static int
+run_simulation(unsigned int seed)
 {
-
 	/* Cards that have already been dealt. */
 	StdDeck_CardMask deadCards;
 
@@ -77,9 +150,10 @@ run_simulation()
 	StdDeck_CardMask completeBoardCards;
 	StdDeck_CardMask_RESET(completeBoardCards); 
 
+	/* Hand which is combination of some player's hand and the board cards
+	 * -- used when evaluated a card's strength. */
 	StdDeck_CardMask evaluationHand;
 	StdDeck_CardMask_RESET(evaluationHand); 
-
 
 	/* Cards to be dealt. */	
 	StdDeck_CardMask toDeal; 
@@ -100,16 +174,11 @@ run_simulation()
 	 */
 	nBoardCards = StdDeck_numCards(boardCards);
 	StdDeck_CardMask_OR(completeBoardCards, completeBoardCards, boardCards);
-
-	DECK_MONTECARLO_N_CARDS_D(StdDeck, toDeal, deadCards,
-	    5 - nBoardCards, 1, do_nothing(););
+	MONTECARLO_N_CARDS_SAMPLE(toDeal, deadCards, 5 - nBoardCards, seed);
 	StdDeck_CardMask_OR(deadCards, deadCards, toDeal);
 	StdDeck_CardMask_OR(completeBoardCards, completeBoardCards, 
 	    toDeal);
 	
-	DBPRINT(("Dead cards after dealing to board: %s\n", 
-	    StdDeck_maskString(deadCards)));
-
 
 	/* Calculate the master player's hand value. */
 	StdDeck_CardMask_OR(evaluationHand, playerHand, completeBoardCards);
@@ -124,18 +193,12 @@ run_simulation()
 	 */
 	rank = 1;
 
-	DBPRINT(("masterHandValue = %d\n", masterHandValue));
-
 	/* Deal cards to the remaining players and calculate values. */
 	for(i = 0; i < nPlayers - 1; i++) {
 
 		/* Deal player i two random (legal) cards. */
-		StdDeck_CardMask_RESET(toDeal); 
-		DECK_MONTECARLO_N_CARDS_D(StdDeck, toDeal, deadCards, 
-		    2, 1, do_nothing(););
-
-		DBPRINT(("\nCards dealt to player %d: %s\n", 
-		    i, StdDeck_maskString(toDeal)));
+		StdDeck_CardMask_RESET(toDeal);
+		MONTECARLO_N_CARDS_SAMPLE(toDeal, deadCards, 2, seed);
 
 		/* Add dealt cards to deadCards. */	
 		StdDeck_CardMask_OR(deadCards, deadCards, toDeal);
@@ -148,8 +211,7 @@ run_simulation()
 		if (oppositionHandValue > masterHandValue) rank += 1; 
 	}
 	 
-	/* Updates stats struct. */
-	update_stats(stats, rank);
+	return rank;
 }
 
 /* 

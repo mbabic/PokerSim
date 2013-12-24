@@ -40,6 +40,21 @@ update_stats(StatsStruct *ss, int rank)
 }
 
 /*
+ * Merges the results of the stats struct ss into the results of the global
+ * status struct gss.
+ */
+void
+merge_stats_structs(StatsStruct *gss, StatsStruct *ss)
+{
+	int i;
+
+	for (i = 0; i < gss->nPlayers; i++) {
+		gss->ranks[i] += ss->ranks[i];
+	}
+	gss->nSimulations += ss->nSimulations;
+}
+
+/*
  * Calculates the results of the simulation.
  */
 void

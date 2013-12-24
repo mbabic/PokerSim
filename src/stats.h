@@ -41,6 +41,7 @@ typedef struct
 
 StatsStruct *init_stats_struct(int);
 void update_stats(StatsStruct *, int);
+void merge_stats_structs(StatsStruct *, StatsStruct *);
 void calculate_results(StatsStruct *);
 void print_stats_struct(StatsStruct *);
 void free_stats_struct(StatsStruct *);

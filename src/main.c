@@ -17,14 +17,16 @@
 #include "simulator.h"
 
 #define DEFAULT_NUM_PLAYERS 4
+#define DEFAULT_NUM_THREADS 4
 #define DEFAULT_NUM_SIMULATIONS 1000000
-#define MAX_IN_LEN 13
+
+extern int nThreads;
 
 static void
 usage()
 {
-	fprintf(stderr, "Usage: ./bin/hand_evaluator -p nPlayers "
-	    "-s nSimulations \n");
+	fprintf(stderr, "Usage: ./bin/hand_evaluator -p nPlayers (must be >= 2)"
+	    " -s nSimulations (must be >= 1) -t nThreads (must be >= 1)\n");
 	exit(EXIT_FAILURE);
 }
 
@@ -33,15 +35,22 @@ void parseArgs(int argc, char *argv[], struct Args *args)
 	/* Optional args. */
 	int np = DEFAULT_NUM_PLAYERS;		/* number of players */
 	int ns = DEFAULT_NUM_SIMULATIONS;	/* number of simulations */
+	int nt = DEFAULT_NUM_THREADS;		/* number of threads */
 	int option;
 
-	while ((option = getopt(argc, argv, "p:s:")) != -1) {
+	while ((option = getopt(argc, argv, "p:s:t:")) != -1) {
 		switch (option) {
 		case 's':
 			ns = atoi(optarg);
+			if (ns < 1) usage();
 			break;
 		case 'p':
 			np = atoi(optarg);
+			if (np < 2) usage();
+			break;
+		case 't':
+			nt = atoi(optarg);
+			if (nt < 1) usage();
 			break;
 		default:
 			usage();
@@ -49,6 +58,7 @@ void parseArgs(int argc, char *argv[], struct Args *args)
 	}
 	args->np = np;
 	args->ns = ns;
+	args->nt = nt;
 }
 
 static void
@@ -112,6 +122,9 @@ main(int argc, char *argv[])
 
 	/* Get cmd line args (if any) */	
 	parseArgs(argc, argv, &args);
+
+	/* Set number of threads to be used in simulation runs. */
+	nThreads = args.nt;
 
 	/* Memset boardCardsStr in case we run pre-flop simulation. */
 	memset(boardCardsStr, 0, sizeof(boardCardsStr));
