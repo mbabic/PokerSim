@@ -54,6 +54,9 @@ run_simulations(int np, int ns, char *playerHandStr, char *boardCardsStr)
 	/* Tally and print out results. */
 	calculate_results(stats);
 	print_stats_struct(stats);
+
+	/* Clean up allocated memory. */
+	free_stats_struct(stats);
 }
 
 /*

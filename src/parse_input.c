@@ -5,6 +5,33 @@ static int is_valid_card_value(char);
 static int is_valid_card_suite(char);
 
 /*
+ * Appends the given card to the string of board cards, assumes all 
+ * input has been parsed and ensured to be correct.
+ */
+void append_card_to_string(char *boardCardStr, char *cardStr,
+    InputType inputType)
+{
+	switch (inputType) {
+	case TURN:
+		boardCardStr[6] = *cardStr;
+		boardCardStr[7] = *(cardStr + 1);
+		boardCardStr[8] = 0;
+		break;
+	case RIVER:
+		boardCardStr[8] = *cardStr;
+		boardCardStr[9] = *(cardStr + 1);
+		boardCardStr[10] = 0;
+		break;
+	default:
+		fprintf(stderr, "Called with append_card_to_string() with "
+		   "invalid input type.\n");
+		exit(EXIT_FAILURE);
+	}
+
+}
+
+
+/*
  * Given an input string, the length of the input string and the type of 
  * input to look for, returns 0 if the string is of an acceptable format and
  * 1 if it is not.

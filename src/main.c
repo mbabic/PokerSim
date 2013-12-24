@@ -54,8 +54,20 @@ void parseArgs(int argc, char *argv[], struct Args *args)
 static void
 get_std_in(char *buf, size_t buflen)
 {
+	char c;
 	memset(buf, 0, buflen);
-	fgets(buf, buflen, stdin);
+	
+	/* Eat garbage chars on stdin. */
+	while (1) {
+		c = fgetc(stdin);
+		if (c != '\n' && c != EOF && c != 0) {
+			buf[0] = c;
+			break;
+		}
+	}
+	fgets(buf+1, buflen-1, stdin);
+
+	if ( (*buf == 'q') || (*buf == 'Q') ) exit(EXIT_SUCCESS);
 	
 	/* Strip newline and replace with null-byte */
 	while ( (*buf != '\n') && (*buf != '\0')) buf++;
@@ -82,11 +94,15 @@ query_run_sim(int *runSim)
 		}
 	}
 	
-	fgets(buf+1, 3, stdin);
+	fgets(buf+1, 2, stdin);
 	if ( (*buf == 'n') || (*buf == 'N') ) *runSim = 0;
 	else *runSim = 1;
 }
 
+/*
+ * TODO: in the below we could factor out each round of simulation into
+ * its own function.
+ */
 int
 main(int argc, char *argv[])
 {
@@ -103,7 +119,11 @@ main(int argc, char *argv[])
 	/* Get master player's hand. -----------------------------------------*/
 	fprintf(stdout, "Please input your hand: ");
 	get_std_in(playerHandStr, sizeof(playerHandStr));
-	parse_input_string(playerHandStr, strlen(playerHandStr), PLAYER_HAND);
+	while (!parse_input_string(playerHandStr, strlen(playerHandStr),
+	    PLAYER_HAND)) {
+		fprintf(stdout, "Please re-enter turn card (q to quit): ");
+		get_std_in(playerHandStr, sizeof(playerHandStr));	
+	}
 	query_run_sim(&runSim);
 	if (runSim) {
 		run_simulations(args.np, args.ns, playerHandStr, boardCardsStr);
@@ -112,25 +132,41 @@ main(int argc, char *argv[])
 	/* Get flop. ---------------------------------------------------------*/
 	fprintf(stdout, "\nPlease enter the flop cards: ");
 	get_std_in(boardCardsStr, sizeof(boardCardsStr));
-	parse_input_string(boardCardsStr, strlen(boardCardsStr), FLOP);
+	while (!parse_input_string(boardCardsStr, strlen(boardCardsStr), FLOP)){
+		fprintf(stdout, "Please re-enter flop cards (q to quit): ");
+		get_std_in(boardCardsStr, sizeof(boardCardsStr));	
+	}
 	query_run_sim(&runSim);
 	if (runSim) {
-		printf("should run simulations\n");
 		run_simulations(args.np, args.ns, playerHandStr, boardCardsStr);
 	}
 
-	return 0;
-
-	/* Get turn card. */
-
-	/* Run post-turn simulations. */
+	/* Get turn card. ----------------------------------------------------*/
+	fprintf(stdout, "\nPlease enter the turn card: ");
+	get_std_in(cardStr, sizeof(cardStr));
+	while (!parse_input_string(cardStr, strlen(cardStr), TURN)) {
+		fprintf(stdout, "Please re-enter turn card (q to quit): ");
+		get_std_in(cardStr, sizeof(cardStr));	
+	}
+	append_card_to_string(boardCardsStr, cardStr, TURN);
+	query_run_sim(&runSim);
 	if (runSim) {
 		run_simulations(args.np, args.ns, playerHandStr, boardCardsStr);
 	}
 
-	/* Get river card. */
+	/* Get river card. ---------------------------------------------------*/
+	fprintf(stdout, "\nPlease enter the river card: ");
+	get_std_in(cardStr, sizeof(cardStr));
+	while (!parse_input_string(cardStr, strlen(cardStr), RIVER)) {
+		fprintf(stdout, "Please re-enter river card (q to quit): ");
+		get_std_in(cardStr, sizeof(cardStr));	
+	}
+	append_card_to_string(boardCardsStr, cardStr, RIVER);
+	query_run_sim(&runSim);
+	if (runSim) {
+		run_simulations(args.np, args.ns, playerHandStr, boardCardsStr);
+	}
 
-	/* Run post-river simulations. */
-	
+	/* Done and done. */	
 	return 0;
 }
