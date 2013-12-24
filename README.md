@@ -6,7 +6,6 @@ Given a single player's hand, runs simple Monte Carlo Texas Hold 'Em simulations
 NOTE: will only compile on POSIX machines as it uses the pthreads library to parallelize the running of simulations. </p>
 <p>
 NOTE: requires the PokerSource library be installed (pokersource.sourceforge.net) -- assumes default installation directory (/usr/local/) but this can easily be configured in the make file. </p>
-
 ##Compilation
 <p>Given the notes above (i.e., given a POSIX compliant environment and the Makefile appropriately configured to point to PokerSource library), simple execute the command: 
 * make all
