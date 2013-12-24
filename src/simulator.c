@@ -8,10 +8,16 @@
 
 #include "simulator.h"
 
+/* Private pieces of states for each simulation (i.e., the variables
+ * which do not change between simulations */
+static int nPlayers;
+static Player *players;
+static StdDeck_CardMask playerHand, boardCards;
+static StatsStruct *stats;
+
 /* Private function declarations. */
 static void do_nothing();
-static void run_simulation(int, StdDeck_CardMask, StdDeck_CardMask,
-    StatsStruct *);
+static void run_simulation();
 static StdDeck_CardMask str_to_poker_hand(char *);
 
 /* Private function implementations */
@@ -20,13 +26,16 @@ static StdDeck_CardMask str_to_poker_hand(char *);
  * Runs the simulations.
  */
 void
-run_simulations(int nPlayers, int nSimulations, char *playerHandStr, 
-    char *boardCardsStr)
+run_simulations(int np, int ns, char *playerHandStr, char *boardCardsStr)
 {
-	StatsStruct *stats = NULL;
-	StdDeck_CardMask playerHand, boardCards;
 	int i;
 
+	/* Set number of players. */
+	nPlayers = np;
+
+	/* Allocate memory for the array of Players */
+	players = calloc(nPlayers, sizeof(Player));
+	if (!players) err(1, "Failed to allocate memory for Player array.");
 
 	/* Convert hand strings into hand bit masks (used by pokersource) */
 	playerHand = str_to_poker_hand(playerHandStr); 
@@ -36,12 +45,11 @@ run_simulations(int nPlayers, int nSimulations, char *playerHandStr,
 	stats = init_stats_struct(nPlayers);
 
 	/* Run simulations. */
-	for (i = 0; i < nSimulations; i++) {
-		DBPRINT(("Running simulation %d.\n", i));
-		run_simulation(nPlayers, playerHand, boardCards, stats);
+	for (i = 0; i < ns; i++) {
+		DBPRINT(("Running simulation %d of %d.\n", i+1, ns));
+		run_simulation();
 	}
 	
-
 }
 
 /*
@@ -51,15 +59,19 @@ run_simulations(int nPlayers, int nSimulations, char *playerHandStr,
  * the player's hand.
  */
 static void
-run_simulation(int nPlayers, StdDeck_CardMask playerHand, 
-    StdDeck_CardMask boardCards, StatsStruct *stats)
+run_simulation()
 {
 
 	/* Cards that have already been dealt. */
 	StdDeck_CardMask deadCards;
 
-	/* Extra boards card that (may) need to be dealt. */	
-	StdDeck_CardMask extraBoardCards; 
+	/* The complete set of board cards after additional ones have been dealt
+ 	 * to the table (if needed). */
+	StdDeck_CardMask completeBoardCards;
+	StdDeck_CardMask_RESET(completeBoardCards); 
+
+	/* Cards to be dealt. */	
+	StdDeck_CardMask toDeal; 
 
 	int nBoardCards;	/* number of board cards */ 
 	int i;
@@ -73,26 +85,33 @@ run_simulation(int nPlayers, StdDeck_CardMask playerHand,
 	 * other players have their cards dealt to them before the flop)
 	 */
 	nBoardCards = StdDeck_numCards(boardCards);
-	if (nBoardCards == 3) {
+	StdDeck_CardMask_OR(completeBoardCards, completeBoardCards, boardCards);
+
+	DECK_MONTECARLO_N_CARDS_D(StdDeck, toDeal, deadCards,\
+	    5 - nBoardCards, 1, do_nothing(););
+	StdDeck_CardMask_OR(deadCards, deadCards, toDeal);
+	StdDeck_CardMask_OR(completeBoardCards, completeBoardCards, 
+	    toDeal);
 	
-		DECK_MONTECARLO_N_CARDS_D(StdDeck, extraBoardCards, deadCards,\
-		    2, 1, do_nothing(););
-		StdDeck_CardMask_OR(deadCards, deadCards, extraBoardCards);
-	
-	} else if (nBoardCards == 4) {
-
-		DECK_MONTECARLO_N_CARDS_D(StdDeck, extraBoardCards, deadCards, \
-		    2, 1, do_nothing(););
-		StdDeck_CardMask_OR(deadCards, deadCards, extraBoardCards);
-
-	}
-
 	DBPRINT(("Dead cards after dealing to board: %s\n", 
 	    StdDeck_maskString(deadCards)));
 
-	/* Deal cards to the remaining players. */
-	for(i = 0; i < nPlayers - 1; i++) {
-			
+	/* Deal cards to the remaining players and calculate values. */
+	for(i = 1; i <= nPlayers - 1; i++) {
+
+		/* Deal player i two random (legal) cards. */
+		DECK_MONTECARLO_N_CARDS_D(StdDeck, toDeal, deadCards, \
+		    2, 1, do_nothing(););
+
+		DBPRINT(("Cards dealt to player %d: %s\n", 
+		    i, StdDeck_maskString(toDeal)));
+
+		/* Add dealt cards to deadCards. */	
+		StdDeck_CardMask_OR(deadCards, deadCards, toDeal);
+
+		/* Update player struct. */
+		set_player_hand(&(players[i]), toDeal);
+		set_player_hand_value(&(players[i]), completeBoardCards);
 	}
 
 	 

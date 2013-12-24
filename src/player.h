@@ -9,6 +9,8 @@
 #include <poker-eval/inlines/eval.h>
 #include <poker-eval/poker_defs.h>
 
+#include "utils.h"
+
 typedef struct {
 	int handValue;
 	StdDeck_CardMask hand;

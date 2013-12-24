@@ -14,6 +14,7 @@
 #include <poker-eval/deck_std.h>
 #include <poker-eval/enumerate.h>
 
+#include "player.h"
 #include "stats.h"
 #include "utils.h"
 

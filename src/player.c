@@ -40,6 +40,5 @@ set_player_hand_value(Player *p, StdDeck_CardMask boardCards)
 {
 	StdDeck_CardMask toEvaluate;
 	StdDeck_CardMask_OR(toEvaluate, p->hand, boardCards);
-	
 	p->handValue = StdDeck_StdRules_EVAL_N(toEvaluate, 7);
 }

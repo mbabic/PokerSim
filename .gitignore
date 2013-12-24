@@ -1,3 +1,9 @@
 # poker hand evaluation library (pokersource.sourcefourge.net)
 poker-eval-138.0
 poker-eval-138.0/*
+
+# binary files
+bin/*.o
+
+# vim .swp files
+src/*.swp

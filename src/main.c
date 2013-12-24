@@ -20,7 +20,7 @@ main(int argc, char *argv[])
 	 */
 	char playerHandStr[] = "AsAh";
 	char boardCardsStr[] = "AdAc2h2d2c";
-	int nPlayers = 2, nSimulations = 1;
+	int nPlayers = 2, nSimulations = 4;
 	run_simulations(nPlayers, nSimulations, playerHandStr, boardCardsStr);
 	return 0;
 }
