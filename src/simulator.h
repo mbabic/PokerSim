@@ -20,6 +20,12 @@
 #include "stats.h"
 #include "utils.h"
 
+/* Struct storing the results of a single trial. */
+struct TrialResults {
+	int rank;
+	double win;
+};
+
 /* Below is a custom-defined Monte Carlo sampling of the deck of cards
  * which more multi-threaded friendly prng (before implementation of the macro
  * below it was the case that increasing the number of threads actually

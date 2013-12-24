@@ -33,7 +33,7 @@ static StatsStruct *globalStats;
 static pthread_mutex_t statsMutex = PTHREAD_MUTEX_INITIALIZER;
 
 static void do_nothing();
-static int run_simulation();
+static void run_simulation(struct drand48_data *, struct TrialResults *);
 static void *run_simulation_batch(void *);
 static StdDeck_CardMask str_to_poker_hand(char *);
 
@@ -103,6 +103,7 @@ run_simulation_batch(void *threadArgs)
 {
 	struct drand48_data randBuffer;
 	struct timeval time;
+	struct TrialResults results;
 	StatsStruct *stats = NULL;
 	long int seed;
 	int i, nIterations, trialResult, *threadId;
@@ -121,8 +122,8 @@ run_simulation_batch(void *threadArgs)
 	nIterations = (nSimulations / nThreads) + 1;
 	
 	for(i = 0; i < nIterations; i++) {
-		trialResult = run_simulation(&randBuffer);
-		update_stats(stats, trialResult);	
+		run_simulation(&randBuffer, &results);
+		update_stats(stats, results.rank, results.win);	
 	} 
 
 	
@@ -141,13 +142,14 @@ run_simulation_batch(void *threadArgs)
  * cards to the given number of players and determines the strength of 
  * the player's hand.  
  *
- * Takes as an argument the seed for the prng of the threads running the trial. 
+ * Takes as an argument the buf which stores information for the prng and
+ * a TrialResults struct in which to store the results of the trial.. 
  *
  * Returns an integer representing the rank of the 
  * master player's hand in the trial.
  */
-static int
-run_simulation(struct drand48_data *randBuffer)
+static void
+run_simulation(struct drand48_data *randBuffer, struct TrialResults *results)
 {
 	/* Cards that have already been dealt. */
 	StdDeck_CardMask deadCards;
@@ -165,6 +167,8 @@ run_simulation(struct drand48_data *randBuffer)
 	/* Cards to be dealt. */	
 	StdDeck_CardMask toDeal; 
 
+	double ties = 0.0;	/* the number of opposition players whose hand
+				 * is of equal value to the master player's */
 	int nBoardCards;	/* number of board cards */ 
 	int masterHandValue;	/* value of the master player's hand */
 	int oppositionHandValue;/* value of opposing player's hand */
@@ -218,10 +222,17 @@ run_simulation(struct drand48_data *randBuffer)
 		oppositionHandValue = 
 		    StdDeck_StdRules_EVAL_N(evaluationHand, 7);
 
-		if (oppositionHandValue > masterHandValue) rank += 1; 
+		if (oppositionHandValue > masterHandValue) rank += 1;
+		else if (oppositionHandValue == masterHandValue){
+			 ties += 1.0;
+		} 
 	}
-	 
-	return rank;
+	
+	/* If rank == 1, we won the hand and should report 1.0/ties as win
+	 * value */
+	if (rank == 1) results->win = 1.0/(ties + 1.0);
+	else results->win = 0.0; 
+	results->rank = rank;
 }
 
 /* 

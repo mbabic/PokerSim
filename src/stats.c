@@ -14,6 +14,8 @@ init_stats_struct(int nPlayers)
 	if (!ss) err(1, "Failed to allocate memory for StatsStruct.");
 
 	ss->nSimulations = 0;
+	ss->wins = 0.0;
+	ss->equity = 0.0;
 	ss->nPlayers = nPlayers;
 
 	ss->ranks = calloc(nPlayers, sizeof(int));
@@ -33,9 +35,10 @@ init_stats_struct(int nPlayers)
  * reflect that another simulation has been run.
  */
 void
-update_stats(StatsStruct *ss, int rank)
+update_stats(StatsStruct *ss, int rank, double win)
 {
 	ss->ranks[rank-1] += 1;
+	ss->wins += win;
 	ss->nSimulations++;
 }
 
@@ -51,6 +54,7 @@ merge_stats_structs(StatsStruct *gss, StatsStruct *ss)
 	for (i = 0; i < gss->nPlayers; i++) {
 		gss->ranks[i] += ss->ranks[i];
 	}
+	gss->wins += ss->wins;
 	gss->nSimulations += ss->nSimulations;
 }
 
@@ -66,6 +70,7 @@ calculate_results(StatsStruct *ss)
 	for(i = 0; i < nPlayers; i++) {
 		ss->results[i] = ((double)ss->ranks[i]) / (double)nSimulations; 
 	}
+	ss->equity = ss->wins/(double)nSimulations;
 }
 
 /*
@@ -79,6 +84,7 @@ print_stats_struct(StatsStruct *ss)
 		fprintf(stdout, "Likelihood given hand is of rank %d:\t %f\n",
 		    i+1, ss->results[i]);
 	}
+	fprintf(stdout, "Hand has equity of %f\n", ss->equity);
 }
 
 /*
