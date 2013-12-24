@@ -7,20 +7,55 @@
  * simulated games. 
  */
 
+#include <err.h>
+#include <getopt.h>
 #include <stdio.h>
+#include <stdlib.h>
 
+#include "args.h"
 #include "simulator.h"
+
+#define DEFAULT_NUM_SIMULATIONS 1000000
+
+static void
+usage()
+{
+	fprintf(stderr, "Usage: ./bin/hand_evaluator -p nPlayers "
+	    "-s nSimulations \n");
+	exit(EXIT_FAILURE);
+}
+
+void parseArgs(int argc, char *argv[], struct Args *args)
+{
+	/* Optional args. */
+	int np = 4;				/* number of players */
+	int ns = DEFAULT_NUM_SIMULATIONS;	/* number of simulations */
+	int option;
+
+	while ((option = getopt(argc, argv, "p:s:")) != -1) {
+		switch (option) {
+		case 's':
+			ns = atoi(optarg);
+			break;
+		case 'p':
+			np = atoi(optarg);
+			break;
+		default:
+			usage();
+		}
+	}
+	args->np = np;
+	args->ns = ns;
+}
 
 int
 main(int argc, char *argv[])
 {
-	/* Get cmd line args:
-	 * 	- number of players
-	 * 	- number of simulations to run (defautls to 10,000)	
-	 */
+	struct Args args;
 	char playerHandStr[] = "2d7h";
 	char boardCardsStr[] = "AhTs8h3s";
-	int nPlayers = 4, nSimulations = 1000000;
-	run_simulations(nPlayers, nSimulations, playerHandStr, boardCardsStr);
+	
+	parseArgs(argc, argv, &args);
+	run_simulations(args.np, args.ns, playerHandStr, boardCardsStr);
 	return 0;
 }

@@ -10,9 +10,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include <poker-eval/poker_defs.h>
 #include <poker-eval/deck_std.h>
 #include <poker-eval/enumerate.h>
+#include <poker-eval/inlines/eval.h>
 
 #include "stats.h"
 #include "utils.h"
