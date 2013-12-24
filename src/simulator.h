@@ -26,7 +26,7 @@
  * _slowed down_ system performance. */
 #define MONTECARLO_N_CARDS_SAMPLE(cards_var, dead_cards, num_cards, buf)\
 do {\
-	StdDeck_CardMask _used;\
+	StdDeck_CardMask _used = dead_cards;\
 	long int _result;\
 	int _i, _c;\
 	StdDeck_CardMask_RESET(cards_var);\

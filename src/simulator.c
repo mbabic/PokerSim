@@ -181,10 +181,10 @@ run_simulation(struct drand48_data *randBuffer)
 	 */
 	nBoardCards = StdDeck_numCards(boardCards);
 	StdDeck_CardMask_OR(completeBoardCards, completeBoardCards, boardCards);
-	MONTECARLO_N_CARDS_SAMPLE(toDeal, deadCards, 5 - nBoardCards, 
+	MONTECARLO_N_CARDS_SAMPLE(toDeal, deadCards, 5 - nBoardCards,
 	    randBuffer);
 	StdDeck_CardMask_OR(deadCards, deadCards, toDeal);
-	StdDeck_CardMask_OR(completeBoardCards, completeBoardCards, 
+	StdDeck_CardMask_OR(completeBoardCards, completeBoardCards,
 	    toDeal);
 	
 
@@ -211,6 +211,8 @@ run_simulation(struct drand48_data *randBuffer)
 		/* Add dealt cards to deadCards. */	
 		StdDeck_CardMask_OR(deadCards, deadCards, toDeal);
 
+		/* Set evaluation hand to be dealt cards and all board cards */
+		StdDeck_CardMask_RESET(evaluationHand);
 		StdDeck_CardMask_OR(evaluationHand, toDeal, completeBoardCards);
 
 		oppositionHandValue = 
