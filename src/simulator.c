@@ -101,20 +101,27 @@ run_simulations(int np, int ns, char *playerHandStr, char *boardCardsStr)
 static void *
 run_simulation_batch(void *threadArgs)
 {
+	struct drand48_data randBuffer;
+	struct timeval time;
 	StatsStruct *stats = NULL;
-	unsigned int seed;
+	long int seed;
 	int i, nIterations, trialResult, *threadId;
 
 	threadId = (int *) threadArgs;
 
-	seed = *threadId * 11231;	/* weak for now */
+	GET_TIME(time);
+
+	seed = *threadId * 11231 + time.tv_usec;
+	
+	/* Call srand48 with seed value to initialize buf data. */
+	srand48_r(seed, &randBuffer);
 
 	stats = init_stats_struct(nPlayers);
 
 	nIterations = (nSimulations / nThreads) + 1;
 	
 	for(i = 0; i < nIterations; i++) {
-		trialResult = run_simulation();
+		trialResult = run_simulation(&randBuffer);
 		update_stats(stats, trialResult);	
 	} 
 
@@ -140,7 +147,7 @@ run_simulation_batch(void *threadArgs)
  * master player's hand in the trial.
  */
 static int
-run_simulation(unsigned int seed)
+run_simulation(struct drand48_data *randBuffer)
 {
 	/* Cards that have already been dealt. */
 	StdDeck_CardMask deadCards;
@@ -174,7 +181,8 @@ run_simulation(unsigned int seed)
 	 */
 	nBoardCards = StdDeck_numCards(boardCards);
 	StdDeck_CardMask_OR(completeBoardCards, completeBoardCards, boardCards);
-	MONTECARLO_N_CARDS_SAMPLE(toDeal, deadCards, 5 - nBoardCards, seed);
+	MONTECARLO_N_CARDS_SAMPLE(toDeal, deadCards, 5 - nBoardCards, 
+	    randBuffer);
 	StdDeck_CardMask_OR(deadCards, deadCards, toDeal);
 	StdDeck_CardMask_OR(completeBoardCards, completeBoardCards, 
 	    toDeal);
@@ -198,7 +206,7 @@ run_simulation(unsigned int seed)
 
 		/* Deal player i two random (legal) cards. */
 		StdDeck_CardMask_RESET(toDeal);
-		MONTECARLO_N_CARDS_SAMPLE(toDeal, deadCards, 2, seed);
+		MONTECARLO_N_CARDS_SAMPLE(toDeal, deadCards, 2, randBuffer);
 
 		/* Add dealt cards to deadCards. */	
 		StdDeck_CardMask_OR(deadCards, deadCards, toDeal);

@@ -24,14 +24,16 @@
  * which more multi-threaded friendly prng (before implementation of the macro
  * below it was the case that increasing the number of threads actually
  * _slowed down_ system performance. */
-#define MONTECARLO_N_CARDS_SAMPLE(cards_var, dead_cards, num_cards, seedp)\
+#define MONTECARLO_N_CARDS_SAMPLE(cards_var, dead_cards, num_cards, buf)\
 do {\
 	StdDeck_CardMask _used;\
+	long int _result;\
 	int _i, _c;\
 	StdDeck_CardMask_RESET(cards_var);\
 	for (_i = 0; _i < num_cards; _i++) {\
 		do {\
-			_c = rand_r(&seedp) % StdDeck_N_CARDS;\
+			lrand48_r(buf, &_result);\
+			_c = _result % StdDeck_N_CARDS;\
 		} while (StdDeck_CardMask_CARD_IS_SET(_used, _c));\
 		StdDeck_CardMask_SET(cards_var, _c);\
 		StdDeck_CardMask_SET(_used, _c);\
