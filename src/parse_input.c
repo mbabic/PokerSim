@@ -57,7 +57,6 @@ parse_input_string(char *str, int len, InputType inputType)
 		if (*(str + 2) == 0) break;
 		str += 2;
 	}
-	printf("returning good \n");
 	return 1;
 }
 
