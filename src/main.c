@@ -77,7 +77,7 @@ get_std_in(char *buf, size_t buflen)
 	}
 	fgets(buf+1, buflen-1, stdin);
 
-	if ( (*buf == 'q') || (*buf == 'Q') ) exit(EXIT_SUCCESS);
+	if (*buf == 'q') exit(EXIT_SUCCESS);
 	
 	/* Strip newline and replace with null-byte */
 	while ( (*buf != '\n') && (*buf != '\0')) buf++;
