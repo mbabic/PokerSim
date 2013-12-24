@@ -30,13 +30,19 @@ typedef struct
 	 * given hand was the (i+1)st best hand).
 	 */
 	int *ranks;
+
+	/* stores results in a manner analogous to the ranks array */
+	double *results;
+ 
+	int nPlayers;		/* number of players in the game */
 	int nSimulations;	/* total number of simulations */
-	double *results;	/* stores results in a manner analogous to
-				 * the ranks array */	 
 
 } StatsStruct;
 
 StatsStruct *init_stats_struct(int);
+void update_stats(StatsStruct *, int);
+void calculate_results(StatsStruct *);
+void print_stats_struct(StatsStruct *);
 void free_stats_struct(StatsStruct *);
 
 

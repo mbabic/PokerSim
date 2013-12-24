@@ -14,6 +14,7 @@ init_stats_struct(int nPlayers)
 	if (!ss) err(1, "Failed to allocate memory for StatsStruct.");
 
 	ss->nSimulations = 0;
+	ss->nPlayers = nPlayers;
 
 	ss->ranks = calloc(nPlayers, sizeof(int));
 	if (!(ss->ranks)) err(1, "Failled to allocate memory for StatsStruct "
@@ -24,6 +25,45 @@ init_stats_struct(int nPlayers)
 	    "member \"results\".");
 
 	return ss;
+}
+
+/*
+ * Updates the given stats struct given that the player's hand was of
+ * the given rank in the last simulation and updates the stats struct to 
+ * reflect that another simulation has been run.
+ */
+void
+update_stats(StatsStruct *ss, int rank)
+{
+	ss->ranks[rank-1] += 1;
+	ss->nSimulations++;
+}
+
+/*
+ * Calculates the results of the simulation.
+ */
+void
+calculate_results(StatsStruct *ss)
+{
+	int nSimulations, nPlayers, i;
+	nPlayers = ss->nPlayers;
+	nSimulations = ss->nSimulations;
+	for(i = 0; i < nPlayers; i++) {
+		ss->results[i] = ((double)ss->ranks[i]) / nSimulations; 
+	}
+}
+
+/*
+ * Prints the results struct in a pleasing way to stdout.
+ */
+void
+print_stats_struct(StatsStruct *ss)
+{
+	int i;
+	for(i = 0; i < ss->nPlayers; i++) {
+		fprintf(stdout, "Likelihood given hand is of rank %d:\t %f\n",
+		    i+1, ss->results[i]);
+	}
 }
 
 /*
