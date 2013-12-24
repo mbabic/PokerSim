@@ -1,4 +1,6 @@
-# Garbage poker simulator makefile.
+# PokerSim Makefile.
+# http://www.github.com/mbabic/PokerSim
+# Marko Tomislav Babic
 
 # Directories.
 BIN = bin
@@ -8,7 +10,10 @@ SRC = src
 CC = cc
 CFLAGS = -c
 LDFLAGS = 
+# NOTE: Edit the line below to point to the include directory of your
+# installation of PokerSource.
 LIB_INCLUDE = /usr/local/include/poker-eval
+#-----------------------------------------------------------------------------
 POKER_LIB = poker-eval
 THREADING_LIB = pthread
 
