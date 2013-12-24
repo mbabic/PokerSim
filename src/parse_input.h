@@ -17,4 +17,5 @@ typedef enum {
 } InputType;
 
 int parse_input_string(char *, int, InputType);
+void append_card_to_string(char *, char *);
 #endif

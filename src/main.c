@@ -62,38 +62,54 @@ get_std_in(char *buf, size_t buflen)
 	*buf = 0;
 }
 
+/*
+ * Queries the user 
+ */
+static void
+query_run_sim(int *runSim)
+{
+	char buf[5];
+	memset(buf, 0, 5);
+	fprintf(stdout, "Run simulation now? (y/n) ");
+	fflush(stdout);
+	getchar(); 	/* eat newline on stdin */
+	fgets(buf, 5, stdin);
+	if ( (*buf == 'y') || (*buf == 'Y') ) *runSim = 1;
+	else *runSim = 0;
+}
+
 int
 main(int argc, char *argv[])
 {
 	struct Args args;
-	char playerHandStr[5], boardCardsStr[12], in[MAX_IN_LEN];
+	char playerHandStr[5], boardCardsStr[12], cardStr[3];
 	int runSim = 0;
 
 	/* Get cmd line args (if any) */	
 	parseArgs(argc, argv, &args);
 
-	/* Null-out str arrays. */
-	memset(playerHandStr, 0, sizeof(playerHandStr));
+	/* Memset boardCardsStr in case we run pre-flop simulation. */
 	memset(boardCardsStr, 0, sizeof(boardCardsStr));
-	memset(in, 0, sizeof(in));
 
 	/* Get master player's hand. */
+	fprintf(stdout, "Please input your hand: ");
 	get_std_in(playerHandStr, sizeof(playerHandStr));
 	parse_input_string(playerHandStr, strlen(playerHandStr), PLAYER_HAND);
-	return 0;	
-	/* Run pre-flop simulations. */
-//	query_run_sim(&runSim);
-
+	query_run_sim(&runSim);
 	if (runSim) {
 		run_simulations(args.np, args.ns, playerHandStr, boardCardsStr);
 	}
+	return 0;	
 
 	/* Get flop. */
-
+	fprintf(stdout, "Please enter the flop cards: ");
+	get_std_in(boardCardsStr, sizeof(boardCardsStr));
 	/* Run post-flop simulations. */
 	if (runSim) {
 		run_simulations(args.np, args.ns, playerHandStr, boardCardsStr);
 	}
+
+	return 0;
 
 	/* Get turn card. */
 
