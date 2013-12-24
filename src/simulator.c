@@ -8,10 +8,15 @@
 
 #include "simulator.h"
 
-/* Private pieces of states for each simulation (i.e., the variables
- * which do not change between simulations */
+/* 
+ * Private pieces of states for each simulation (i.e., the variables
+ * which do not change between simulations.
+ * TODO: if you want to parallelize the running of simulations eventually,
+ * then these pieces of state will have to be moved into run_simulations() and
+ * a new function that launches threads with run_simulations() will be 
+ * implemented.
+ */
 static int nPlayers;
-static Player *players;
 static StdDeck_CardMask playerHand, boardCards;
 static StatsStruct *stats;
 
@@ -23,7 +28,7 @@ static StdDeck_CardMask str_to_poker_hand(char *);
 /* Private function implementations */
 
 /*
- * Runs the simulations.
+ * Sets state vars, run simulations.
  */
 void
 run_simulations(int np, int ns, char *playerHandStr, char *boardCardsStr)
@@ -32,10 +37,6 @@ run_simulations(int np, int ns, char *playerHandStr, char *boardCardsStr)
 
 	/* Set number of players. */
 	nPlayers = np;
-
-	/* Allocate memory for the array of Players */
-	players = calloc(nPlayers, sizeof(Player));
-	if (!players) err(1, "Failed to allocate memory for Player array.");
 
 	/* Convert hand strings into hand bit masks (used by pokersource) */
 	playerHand = str_to_poker_hand(playerHandStr); 
@@ -49,7 +50,10 @@ run_simulations(int np, int ns, char *playerHandStr, char *boardCardsStr)
 		DBPRINT(("Running simulation %d of %d.\n", i+1, ns));
 		run_simulation();
 	}
-	
+
+	/* Tally and print out results. */
+	calculate_results(stats);
+	print_stats_struct(stats);
 }
 
 /*
@@ -70,10 +74,17 @@ run_simulation()
 	StdDeck_CardMask completeBoardCards;
 	StdDeck_CardMask_RESET(completeBoardCards); 
 
+	StdDeck_CardMask evaluationHand;
+	StdDeck_CardMask_RESET(evaluationHand); 
+
+
 	/* Cards to be dealt. */	
 	StdDeck_CardMask toDeal; 
 
 	int nBoardCards;	/* number of board cards */ 
+	int masterHandValue;	/* value of the master player's hand */
+	int oppositionHandValue;/* value of opposing player's hand */
+	int rank;		/* rank of master player's hand in trial */
 	int i;
 
 	/* Add playerHand and boardCards to deadCards */
@@ -87,7 +98,7 @@ run_simulation()
 	nBoardCards = StdDeck_numCards(boardCards);
 	StdDeck_CardMask_OR(completeBoardCards, completeBoardCards, boardCards);
 
-	DECK_MONTECARLO_N_CARDS_D(StdDeck, toDeal, deadCards,\
+	DECK_MONTECARLO_N_CARDS_D(StdDeck, toDeal, deadCards,
 	    5 - nBoardCards, 1, do_nothing(););
 	StdDeck_CardMask_OR(deadCards, deadCards, toDeal);
 	StdDeck_CardMask_OR(completeBoardCards, completeBoardCards, 
@@ -96,25 +107,46 @@ run_simulation()
 	DBPRINT(("Dead cards after dealing to board: %s\n", 
 	    StdDeck_maskString(deadCards)));
 
+
+	/* Calculate the master player's hand value. */
+	StdDeck_CardMask_OR(evaluationHand, playerHand, completeBoardCards);
+	masterHandValue = StdDeck_StdRules_EVAL_N(evaluationHand, 7);
+
+	/*
+	 * Strategy for calculating master player's hand's rank: assume it is
+	 * the best and anytime while dealing to other players and calculating
+	 * the value of their hands if we encounter a hand value greater than
+	 * the master player's hand's value we increment rank.
+	 * Run time: O(nPlayers) time (as each value is considered only once)
+	 */
+	rank = 1;
+
+	DBPRINT(("masterHandValue = %d\n", masterHandValue));
+
 	/* Deal cards to the remaining players and calculate values. */
-	for(i = 1; i <= nPlayers - 1; i++) {
+	for(i = 0; i < nPlayers - 1; i++) {
 
 		/* Deal player i two random (legal) cards. */
-		DECK_MONTECARLO_N_CARDS_D(StdDeck, toDeal, deadCards, \
+		StdDeck_CardMask_RESET(toDeal); 
+		DECK_MONTECARLO_N_CARDS_D(StdDeck, toDeal, deadCards, 
 		    2, 1, do_nothing(););
 
-		DBPRINT(("Cards dealt to player %d: %s\n", 
+		DBPRINT(("\nCards dealt to player %d: %s\n", 
 		    i, StdDeck_maskString(toDeal)));
 
 		/* Add dealt cards to deadCards. */	
 		StdDeck_CardMask_OR(deadCards, deadCards, toDeal);
 
-		/* Update player struct. */
-		set_player_hand(&(players[i]), toDeal);
-		set_player_hand_value(&(players[i]), completeBoardCards);
-	}
+		StdDeck_CardMask_OR(evaluationHand, toDeal, completeBoardCards);
 
+		oppositionHandValue = 
+		    StdDeck_StdRules_EVAL_N(evaluationHand, 7);
+
+		if (oppositionHandValue > masterHandValue) rank += 1; 
+	}
 	 
+	/* Updates stats struct. */
+	update_stats(stats, rank);
 }
 
 /* 

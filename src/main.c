@@ -18,9 +18,9 @@ main(int argc, char *argv[])
 	 * 	- number of players
 	 * 	- number of simulations to run (defautls to 10,000)	
 	 */
-	char playerHandStr[] = "AsAh";
-	char boardCardsStr[] = "AdAc2h2d2c";
-	int nPlayers = 2, nSimulations = 4;
+	char playerHandStr[] = "2d7h";
+	char boardCardsStr[] = "AhTs8h3s";
+	int nPlayers = 4, nSimulations = 1000000;
 	run_simulations(nPlayers, nSimulations, playerHandStr, boardCardsStr);
 	return 0;
 }

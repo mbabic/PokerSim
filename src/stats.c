@@ -49,7 +49,7 @@ calculate_results(StatsStruct *ss)
 	nPlayers = ss->nPlayers;
 	nSimulations = ss->nSimulations;
 	for(i = 0; i < nPlayers; i++) {
-		ss->results[i] = ((double)ss->ranks[i]) / nSimulations; 
+		ss->results[i] = ((double)ss->ranks[i]) / (double)nSimulations; 
 	}
 }
 
