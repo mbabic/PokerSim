@@ -14,6 +14,7 @@ init_stats_struct(int nPlayers)
 	if (!ss) err(1, "Failed to allocate memory for StatsStruct.");
 
 	ss->nSimulations = 0;
+	ss->equity = 0.0;
 	ss->nPlayers = nPlayers;
 
 	ss->ranks = calloc(nPlayers, sizeof(int));
@@ -24,6 +25,9 @@ init_stats_struct(int nPlayers)
 	if (!(ss->results)) err(1, "Failed to allocate memory for StatsStrct "	
 	    "member \"results\".");
 
+	ss->wins = calloc(nPlayers, sizeof(double));
+	if (!(ss->wins)) err(1, "Failed to allocate memory for StatsStrct "	
+	    "member \"wins\".");
 	return ss;
 }
 
